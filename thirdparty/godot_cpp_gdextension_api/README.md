@@ -6,6 +6,10 @@ This directory contains the API JSON for
 ## Current API version
 - [commit fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce](https://github.com/godotengine/godot/commit/fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce)
 
+## Current API modifications
+
+- The `_update_android_prebuilt_manifest` method for `EditorExportPlugin`
+
 ## Updating API
 
 The API JSON is synced with the latest version of Godot used when developing the plugin. Here is the
@@ -20,3 +24,4 @@ update procedure:
 godot --dump-extension-api
 ```
 - Copy the generated `extension_api.json` file into this directory
+- List any additional modifications under Current API modifications

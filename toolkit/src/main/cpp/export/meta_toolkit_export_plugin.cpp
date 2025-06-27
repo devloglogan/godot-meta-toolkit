@@ -9,6 +9,7 @@
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/xr_interface.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -114,19 +115,14 @@ Dictionary MetaToolkitExportPlugin::_get_export_options_overrides(
 		return overrides;
 	}
 
-	// Disable gradle build on the Android editor
+	// Gradle build overrides
+	overrides["gradle_build/export_format"] = 0; // apk
 	bool is_mobile_editor = OS::get_singleton()->has_feature("mobile");
 	if (!is_mobile_editor) {
-		// Gradle build overrides
-		overrides["gradle_build/use_gradle_build"] = true;
-		overrides["gradle_build/export_format"] = 0; // apk
 		overrides["gradle_build/min_sdk"] = "29"; // Android 10
 		overrides["gradle_build/target_sdk"] = "34"; // Android 14
+		overrides["gradle_build/use_gradle_build"] = true;
 	} else {
-		overrides["gradle_build/use_gradle_build"] = false;
-		overrides["gradle_build/export_format"] = 0; // apk
-		overrides["gradle_build/min_sdk"] = "";
-		overrides["gradle_build/target_sdk"] = "";
 		overrides["gradle_build/compress_native_libraries"] = false;
 	}
 
@@ -236,6 +232,7 @@ PackedStringArray MetaToolkitExportPlugin::_get_supported_devices() const {
 
 	if (_get_bool_option("meta_xr_features/quest_3_support")) {
 		supported_devices.append("quest3");
+		supported_devices.append("quest3s");
 	}
 
 	if (_get_bool_option("meta_xr_features/quest_pro_support")) {
@@ -352,7 +349,8 @@ void MetaToolkitExportPlugin::_get_manifest_entries(Vector<godot::String> &r_per
 
 	// Check for scene api.
 	bool use_scene_api = ProjectSettings::get_singleton()->get_setting_with_override("xr/openxr/extensions/meta/scene_api");
-	if (use_scene_api) {
+	bool use_environment_depth = ProjectSettings::get_singleton()->get_setting_with_override("xr/openxr/extensions/meta/environment_depth");
+	if (use_scene_api || use_environment_depth) {
 		r_permissions.append("com.oculus.permission.USE_SCENE");
 	}
 
@@ -533,7 +531,7 @@ PackedByteArray MetaToolkitExportPlugin::_update_android_prebuilt_manifest(const
 							String feature_version = features[i].version;
 							bool has_version_attribute = !feature_version.is_empty();
 
-							print_line("Adding feature " + feature_name);
+							UtilityFunctions::print_verbose("Adding feature " + feature_name);
 
 							int32_t feature_string = string_table.find(feature_name);
 							if (feature_string == -1) {
@@ -642,7 +640,7 @@ PackedByteArray MetaToolkitExportPlugin::_update_android_prebuilt_manifest(const
 						}
 
 						for (int i = 0; i < permissions.size(); ++i) {
-							print_line("Adding permission " + permissions[i]);
+							UtilityFunctions::print_verbose("Adding permission " + permissions[i]);
 
 							manifest_cur_size += 56 + 24; // node + end node
 							manifest_buffer.resize(manifest_cur_size);
@@ -711,7 +709,7 @@ PackedByteArray MetaToolkitExportPlugin::_update_android_prebuilt_manifest(const
 							String meta_data_name = metadata[i].name;
 							String meta_data_value = metadata[i].value;
 
-							print_line("Adding application metadata " + meta_data_name);
+							UtilityFunctions::print_verbose("Adding application metadata " + meta_data_name);
 
 							int32_t meta_data_name_string = string_table.find(meta_data_name);
 							if (meta_data_name_string == -1) {
